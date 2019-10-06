@@ -23,7 +23,7 @@ def load_file(fSource) :
         lstLine = strLine.rstrip('\n').split(';')
         for i in range(0,len(lstLine)) :                   # Boucle sur les colonnes du fichier
             try :    
-                dicData[i].append(lstLine[i])
+                dicData[i].append(float(lstLine[i]))
             except :                                       # initialisation du premier élément de la liste
                 dicData[i] = [lstLine[i]]                  # pour la 1 valeur, le type associé n'est pas connu       
     return dicData
@@ -33,20 +33,14 @@ def load_file(fSource) :
 # param entrant : intGraph   : integer      : référence du graph
 #                 dicData    : dinctionnary : dictionnaire des données comparatives
 #                 dicMesure  : dinctionnary : dictionnaire des données comparatives
-#                 intMesure  : integer      : indice dans le dictionnaire de mesure 
 #                 strLab_y   : string       : libelle axe y
-#                 strLab_leg : string       :  = libelle de la legende
-#                 strLoc_leg : string       : = position de la legende
-def graph(intGraph,dicData,dicMesure,intMesure,strLab_y,strLab_leg,strLoc_leg) :
+#                 strLab_leg : string       : libelle de la legende
+#                 strLoc_leg : string       : position de la legende
+def graph(intGraph,dicData,dicMesure,strLab_y,strLab_leg,strLoc_leg) :
     pyplot.subplot(1, 3, intGraph)                                   # Référence du graph pour la suite
-    lstAxeX = [float(i) for i in dicData[0][1:]]                     # Récupération des données axe X
-    for j in range(1,len(dicData)):                                  # Boucle sur index du dictionnaire
-        pyplot.plot(
-            lstAxeX,                                                 # liste contenant les données axe X                 
-            [float(i) for i in dicData[j][1:]],                      # transformation en liste float d'un index
-            label=dicData[j][0]+ " " + strLab_leg )                  # le libelle contenu dans [0] de la liste
+    [pyplot.plot(dicData[0][1:],dicData[i][1:],label=dicData[i][0]+ " " + strLab_leg ) for i in range(1,len(dicData))]
     pyplot.legend( loc = strLoc_leg)
-    pyplot.scatter([float(i) for i in dicMesure[0][1:]],[float(i) for i in dicMesure[intMesure][1:]])
+    pyplot.scatter(dicMesure[0][1:],dicMesure[intGraph][1:])
     pyplot.xlabel('Age en mois') 
     pyplot.ylabel(strLab_y)
     pyplot.grid(True)
@@ -56,25 +50,19 @@ def graph(intGraph,dicData,dicMesure,intMesure,strLab_y,strLab_leg,strLoc_leg) :
 # 
 
 # chargement des données light
-dicWeights_boys  = load_file('poids-age-garcon-0-60-light.csv')
-dicHeights_boys  = load_file('taille-age-garcon-0-60-light.csv')
-dicSkulls_boys   = load_file('perim-cra-age-garcon-0-60-light.csv')
-dicWeights_girls = load_file('poids-age-fille-0-60-light.csv')
-dicHeights_girls = load_file('taille-age-fille-0-60-light.csv')
-dicSkulls_girls  = load_file('perim-cra-age-fille-0-60-light.csv')
-
-# chargement des données full
-# dicWeights_boys  = load_file('poids-age-garcon-0-60.csv')
-# dicHeights_boys  = load_file('taille-age-garcon-0-60.csv')
-# dicSkulls_boys   = load_file('perim-cra-age-garcon-0-60.csv')
-# dicWeights_girls = load_file('poids-age-fille-0-60.csv')
-# dicHeights_girls = load_file('taille-age-fille-0-60.csv')
-# dicSkulls_girls  = load_file('perim-cra-age-fille-0-60.csv')
-
-# dictionnaire en fonction des genres
-dicWeights = {'g': dicWeights_boys, 'f' : dicWeights_girls }
-dicHeights = {'g': dicHeights_boys, 'f' : dicHeights_girls }
-dicSkulls  = {'g': dicSkulls_boys , 'f' : dicSkulls_girls  }
+# Dictionnaire des normes
+# Niveau 1 :
+#   Clé  : Type (poids,taille)
+#   Data : 
+#          Liste :
+#                   1 : Numéro du graph
+#                   2 : Dictionnaire
+#                             Clé   :  Genre 
+#                              Data :  Contenu du fichier
+#                   3 : Libelle  Y
+#                   4 : libelle  legende
+#                   5 : position legende   
+dicNorme ={'W':[1,{'g':load_file('poids-age-garcon-0-60-light.csv'),'f':load_file('poids-age-fille-0-60-light.csv')},'Poids en kg','poids','upper left'],'T':[2,{'g': load_file('taille-age-garcon-0-60-light.csv'),'f':load_file('taille-age-fille-0-60-light.csv')},'Taille en cm','taille','upper left'],'S':[3,{'g': load_file('perim-cra-age-garcon-0-60-light.csv'),'f':load_file('perim-cra-age-fille-0-60-light.csv') },'Périmètre en cm','périmètre','lower right']}      
 
 # chargement des mesures
 dicMesure = load_file('mesures.csv')
@@ -88,7 +76,5 @@ while True:
         break
 
 # Affichage du graph
-graph(1,dicWeights[strGenre],dicMesure,1,'Poids en kg','poids','upper left')
-graph(2,dicHeights[strGenre],dicMesure,2,'Taille en cm','taille','upper left')
-graph(3,dicSkulls[strGenre],dicMesure,3,'Périmètre de la boite craniene en cm','périmètre cranien','lower right')
+[graph(dicNorme[Mykey][0],dicNorme[Mykey][1][strGenre],dicMesure,dicNorme[Mykey][2],dicNorme[Mykey][3],dicNorme[Mykey][4]) for Mykey in dicNorme.keys()]
 pyplot.show()
